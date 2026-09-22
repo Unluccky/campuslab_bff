@@ -11,6 +11,10 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthFlowTyp
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthenticationResultType;
 
 import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException;
 
 @Service
 public class AuthService {
@@ -40,8 +44,17 @@ public class AuthService {
                 .authParameters(authParams)
                 .build();
 
-        AdminInitiateAuthResponse response = cognitoClient.adminInitiateAuth(authRequest);
+        AdminInitiateAuthResponse response;
+        try {
+            response = cognitoClient.adminInitiateAuth(authRequest);
+        } catch (NotAuthorizedException | UserNotFoundException exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas");
+        }
         AuthenticationResultType result = response.authenticationResult();
+        if (result == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "La cuenta requiere completar un desafío de Cognito");
+        }
 
         return new AuthResponseDto(
                 result.accessToken(),
