@@ -15,6 +15,7 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+ @org.springframework.beans.factory.annotation.Value("${campuslab.allowed-origins:http://localhost:4200,http://127.0.0.1:4200}") private List<String> allowedOrigins;
 
     // Cadena 1: solo para /api/bff/auth/** -- publica, sin validacion de JWT en absoluto.
     // Se evalua PRIMERO (Order 1) y esta completamente aislada del resource server.
@@ -53,10 +54,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
