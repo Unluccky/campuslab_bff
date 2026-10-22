@@ -1,3 +1,15 @@
+# Experiencia 2 — estado actual
+
+Rama `feature/siguiente-experiencia`. Login académico mediante Azure/MSAL, token validado en API Gateway y Spring. Se conserva compatibilidad con Cognito para las rutas anteriores. La configuración cloud y evidencia del 19/10 están en [CampusLab-Documentacion](https://github.com/Unluccky/CampusLab-Documentacion/tree/feature/siguiente-experiencia).
+
+BFF desplegado en EC2, consumido por Angular mediante Gateway. `/api/bff/academic/me` verifica identidad y roles; `/recursos`, `/reservas`, `/tickets` y `/rabbit` reenvían exclusivamente a los servicios configurados. La administración de mensajería exige Azure y Admin. Mantener el mapeo Gateway `overwrite:path=$request.path` y una integración OPTIONS sin JWT para CORS.
+
+Variables: `AZURE_ENABLED`, `AZURE_ADMIN_OBJECT_IDS`, `AZURE_OPERATOR_OBJECT_IDS`, `CATALOG_BASE_URL`, `CAMPUSLAB_BOOKINGS_URL`, `CAMPUSLAB_RABBIT_ADMIN_URL`. No requiere credenciales AWS para verificar JWT Azure; el login Cognito anterior sí usa su configuración AWS.
+
+---
+
+## Documentación anterior y compatibilidad
+
 # Actualización: siguiente experiencia
 
 Rama feature/siguiente-experiencia. Incluye las mejoras solicitadas después de EA1; ver CampusLab-Documentacion/infra/siguiente/README.md. Catálogo, reservas y usuarios usan RDS en AWS. El frontend incorpora /admin/usuarios, guard probado y Login Admin renovado. El BFF conserva el login con Cognito y requiere credenciales temporales vigentes. La documentación EA1 que sigue describe la entrega anterior.
