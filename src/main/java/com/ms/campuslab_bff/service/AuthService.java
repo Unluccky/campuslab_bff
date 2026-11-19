@@ -15,6 +15,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.SignUpRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.SignUpResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ConfirmSignUpRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UsernameExistsException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidPasswordException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CodeMismatchException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ExpiredCodeException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AliasExistsException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
+import com.ms.campuslab_bff.dto.RegisterRequestDto;
+import com.ms.campuslab_bff.dto.ConfirmRegistrationRequestDto;
 
 @Service
 public class AuthService {
@@ -63,5 +74,38 @@ public class AuthService {
                 result.expiresIn(),
                 result.tokenType()
         );
+    }
+
+    public String register(RegisterRequestDto request) {
+        try {
+            SignUpResponse response = cognitoClient.signUp(SignUpRequest.builder()
+                    .clientId(clientId)
+                    .username(request.email().trim().toLowerCase(java.util.Locale.ROOT))
+                    .password(request.password())
+                    .userAttributes(AttributeType.builder().name("email").value(request.email().trim()).build())
+                    .build());
+            if (response.codeDeliveryDetails() == null || response.codeDeliveryDetails().destination() == null) {
+                return "Cuenta creada. Ya puedes iniciar sesión.";
+            }
+            return "Enviamos un código de verificación a " + response.codeDeliveryDetails().destination() + ".";
+        } catch (UsernameExistsException | AliasExistsException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una cuenta con ese correo.");
+        } catch (InvalidPasswordException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña no cumple la política de seguridad de Cognito.");
+        }
+    }
+
+    public void confirmRegistration(ConfirmRegistrationRequestDto request) {
+        try {
+            cognitoClient.confirmSignUp(ConfirmSignUpRequest.builder()
+                    .clientId(clientId)
+                    .username(request.email().trim().toLowerCase(java.util.Locale.ROOT))
+                    .confirmationCode(request.code().trim())
+                    .build());
+        } catch (CodeMismatchException | ExpiredCodeException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El código no es válido o venció. Solicita otro código.");
+        } catch (NotAuthorizedException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "La cuenta ya está confirmada o requiere asistencia.");
+        }
     }
 }

@@ -35,6 +35,7 @@ public class TokenAuthorities {
             } else {
                 var groups = jwt.getClaimAsStringList("cognito:groups");
                 if (groups != null) roles.addAll(groups);
+                roles.add("ROLE_ESTUDIANTE");
             }
             return roles.stream().map(SimpleGrantedAuthority::new)
                 .map(a -> (org.springframework.security.core.GrantedAuthority) a).toList();

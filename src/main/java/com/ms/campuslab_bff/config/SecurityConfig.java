@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/bff/admin/directorio", "/api/bff/academic/admin/directorio").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 
